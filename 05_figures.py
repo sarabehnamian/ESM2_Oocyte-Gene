@@ -77,8 +77,9 @@ def fig_auroc_by_gene():
                 markeredgecolor="white", markeredgewidth=0.8)
 
     ax.axvline(0.5, color="0.35", linestyle="--", linewidth=1.0)
-    ax.text(0.5, 1.005, "chance", transform=ax.get_xaxis_transform(),
-            ha="center", va="bottom", fontsize=8, color="0.35")
+    # Label sits inside the axes at the foot of the line, clear of the title.
+    ax.text(0.51, 0.01, "chance", transform=ax.get_xaxis_transform(),
+            ha="left", va="bottom", fontsize=8, color="0.35")
 
     ax.set_yticks(ys)
     ax.set_yticklabels(["%s  (%d/%d)" % (r["gene"], r["n_pathogenic"], r["n_benign"])

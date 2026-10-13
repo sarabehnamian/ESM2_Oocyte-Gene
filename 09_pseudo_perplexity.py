@@ -43,11 +43,14 @@ each position is scored in a window of 1022 residues centred on it,
 clipped at the ends, the same rule step 03 uses for variants. The model
 therefore never sees the full protein for BRCA1, BRCA2, ATM, CFTR and
 other long genes; this is reported per gene in the output
-("windowed": true).
+("windowed": true). The unmasked entropy pass on long proteins uses
+windows every 256 residues and reads each position from the window in
+which it is most central.
 
-Cost. One forward pass per residue. The included genes total about
-15,000 residues, all 28 genes about 23,000. With the 650M model that is
-roughly 20-40 minutes on a recent GPU and many hours on a CPU.
+Cost. One masked forward pass per residue, plus a few unmasked passes.
+The 14 included genes total 16,752 residues, all 28 genes 24,775. With
+the 650M model that is roughly 15-40 minutes on a recent GPU and most of
+a day on a CPU. Run it twice (trained, then --random-init).
 
 Output
     results/pseudo_perplexity.jsonl               one row per gene
@@ -72,6 +75,7 @@ from common import (DATA_DIR, RESULT_DIR, append_jsonl, read_jsonl,
                     spearman_permutation, write_jsonl)
 
 MAX_LEN = 1022
+UNMASKED_STRIDE = 256   # spacing of unmasked windows on long proteins
 STANDARD = "ACDEFGHIKLMNPQRSTVWY"
 OUT_GENES = os.path.join(RESULT_DIR, "pseudo_perplexity.jsonl")
 
@@ -95,16 +99,25 @@ def score_gene(seq, tok, model, device, batch_size):
         p = torch.softmax(logits_rows[:, aa_ids], dim=-1)
         return -(p * torch.log(p.clamp_min(1e-12))).sum(-1)
 
-    # Unmasked passes: wild-type marginal entropy at each position.
+    # Unmasked passes: wild-type marginal entropy at each position. Long
+    # proteins use windows every UNMASKED_STRIDE residues, and each position
+    # is read from the window where it sits closest to the centre, so this
+    # needs a handful of passes rather than one per residue.
     wt_entropy = np.zeros(len(seq))
+    if len(seq) <= MAX_LEN:
+        offsets = [0]
+    else:
+        offsets = sorted(set(list(range(0, len(seq) - MAX_LEN + 1, UNMASKED_STRIDE))
+                             + [len(seq) - MAX_LEN]))
     cache = {}
     with torch.no_grad():
-        for i in range(len(seq)):
-            sub, off = window_for(seq, i)
-            if off not in cache:
-                enc = tok(sub, return_tensors="pt").to(device)
-                cache[off] = entropy(model(**enc).logits[0, 1:len(sub) + 1]).cpu().numpy()
-            wt_entropy[i] = cache[off][i - off]
+        for off in offsets:
+            sub = seq[off:off + MAX_LEN]
+            enc = tok(sub, return_tensors="pt").to(device)
+            cache[off] = entropy(model(**enc).logits[0, 1:len(sub) + 1]).cpu().numpy()
+    for i in range(len(seq)):
+        off = min(offsets, key=lambda o: abs(i - (o + MAX_LEN // 2)))
+        wt_entropy[i] = cache[off][i - off]
 
     # Masked passes, batched. Windows only differ for long proteins, and
     # all windows have the same length, so batches need no padding.

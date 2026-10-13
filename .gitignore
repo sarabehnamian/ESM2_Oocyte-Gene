@@ -1,0 +1,3 @@
+__pycache__/
+*.pyc
+data/variant_summary.txt.gz

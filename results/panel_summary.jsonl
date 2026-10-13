@@ -1,0 +1,6 @@
+{"auroc": 0.6186663239294818, "hi": 0.740880122760605, "lo": 0.48610008818342143, "method": "esm", "n_genes": 4, "panel": "oocyte"}
+{"auroc": 0.9025635106242202, "hi": 0.9456248258938287, "lo": 0.8513455092655945, "method": "esm", "n_genes": 10, "panel": "control"}
+{"auroc": 0.5976770630279402, "hi": 0.7333443562610229, "lo": 0.47639345983370107, "method": "blosum", "n_genes": 4, "panel": "oocyte"}
+{"auroc": 0.7070206543659874, "hi": 0.7730476711072455, "lo": 0.639123238516261, "method": "blosum", "n_genes": 10, "panel": "control"}
+{"auroc": 0.2838971866947384, "hi": 0.420214579876498, "lo": 0.15333195180931514, "method": "esm", "n_genes": null, "panel": "control_minus_oocyte"}
+{"auroc": 0.10934359133804716, "hi": 0.2495134783362504, "lo": -0.034136756859846525, "method": "blosum", "n_genes": null, "panel": "control_minus_oocyte"}

@@ -38,6 +38,8 @@ Output
     results/permutation_test.jsonl     one row per setting and quantity
     results/permutation_null.jsonl     the full null distribution of gaps
     results/permutation_gene_aurocs.jsonl   per-gene AUROCs used
+    results/permutation_leave_one_out.jsonl gaps and exact p with each
+                                       oocyte gene left out in turn
 
 Usage
     python 06_permutation_test.py
@@ -138,6 +140,22 @@ def run_setting(records, setting, scorers, baseline, min_class):
                       "observed_gap": obs, "null_gaps": [round(x, 6) for x in null]})
         print("%-12s %8.3f %8.3f %8.3f %5d/%-5d %8.4f"
               % (name, oo_mean, ct_mean, obs, n_ge, n_splits, p))
+    # Leave each oocyte gene out in turn and repeat the exact test.
+    loo = []
+    print("\nleave one oocyte gene out")
+    for drop in [r["gene"] for r in inc if r["panel"] == "oocyte"]:
+        keep = [i for i, r in enumerate(inc) if r["gene"] != drop]
+        sub_oo = [is_oo[i] for i in keep]
+        parts = []
+        for name, vals in quantities.items():
+            obs, n_ge, n_splits, _ = exact_panel_permutation([vals[i] for i in keep], sub_oo)
+            loo.append({"setting": setting, "dropped": drop, "quantity": name,
+                        "observed_gap": obs, "n_at_least": n_ge, "n_splits": n_splits,
+                        "p_one_sided": n_ge / n_splits})
+            parts.append("%s %.3f (%d/%d)" % (name, obs, n_ge, n_splits))
+        print("  without %-7s %s" % (drop, "  ".join(parts)))
+    for t in tests:
+        t["leave_one_out"] = [x for x in loo if x["quantity"] == t["quantity"]]
     return rows, tests, nulls
 
 
@@ -186,11 +204,13 @@ def main():
         all_nulls += nulls
 
     suffix = ("_" + args.tag) if args.tag else ""
+    all_loo = [x for t in all_tests for x in t.pop("leave_one_out", [])]
     write_jsonl(os.path.join(RESULT_DIR, "permutation_test%s.jsonl" % suffix), all_tests)
     write_jsonl(os.path.join(RESULT_DIR, "permutation_null%s.jsonl" % suffix), all_nulls)
     write_jsonl(os.path.join(RESULT_DIR, "permutation_gene_aurocs%s.jsonl" % suffix), all_rows)
-    print("\nwrote results/permutation_test%s.jsonl, permutation_null%s.jsonl, "
-          "permutation_gene_aurocs%s.jsonl" % (suffix, suffix, suffix))
+    write_jsonl(os.path.join(RESULT_DIR, "permutation_leave_one_out%s.jsonl" % suffix), all_loo)
+    print("\nwrote results/permutation_test%s.jsonl and the null, gene AUROC and "
+          "leave-one-out files" % suffix)
 
 
 if __name__ == "__main__":

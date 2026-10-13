@@ -1,0 +1,43 @@
+{
+  "_note": "Written without access to MaveDB. Every URN and threshold below is a candidate to confirm with 'python 11_mave_controls.py --search GENE' and '--inspect URN' against the cited paper. Set verified=true only after checking. Null thresholds must be filled in before the gene can run.",
+  "BRCA1": {
+    "urn": "urn:mavedb:00000097-0-1",
+    "score_column": "score",
+    "rule": "below",
+    "lof_max": -1.328,
+    "func_min": -0.748,
+    "offset": 0,
+    "source": "Findlay et al. 2018 Nature 562:217, saturation genome editing of BRCA1 RING and BRCT exons in HAP1. Paper classes: function score <= -1.328 non-functional (LOF), >= -0.748 functional (FUNC), between intermediate (INT, left out). URN is a candidate: confirm it is the Findlay SGE set and that 'score' is the function score.",
+    "verified": false
+  },
+  "TP53": {
+    "urn": "urn:mavedb:00000068-a-1",
+    "score_column": "score",
+    "rule": "above",
+    "lof_max": null,
+    "func_min": null,
+    "offset": 0,
+    "source": "Candidate: Giacomelli et al. 2018 Nat Genet 50:1381, A549 p53-null cells with nutlin-3 (loss-of-function variants enrich, so higher score = loss of function). Confirm the URN and screen, then take the thresholds from the paper and record them here. Kotler et al. 2018 Mol Cell is an alternative.",
+    "verified": false
+  },
+  "PTEN": {
+    "urn": "urn:mavedb:00000054-a-1",
+    "score_column": "score",
+    "rule": "below",
+    "lof_max": null,
+    "func_min": null,
+    "offset": 0,
+    "source": "Candidate: Mighell et al. 2018 Am J Hum Genet 102:943, PTEN lipid phosphatase activity in yeast (low score = loss of function). Confirm URN and take the paper's thresholds. Matreyek et al. 2018 Nat Genet VAMP-seq abundance is an alternative, but it measures abundance, not activity.",
+    "verified": false
+  },
+  "MSH2": {
+    "urn": "urn:mavedb:00000050-a-1",
+    "score_column": "score",
+    "rule": "above",
+    "lof_max": null,
+    "func_min": null,
+    "offset": 0,
+    "source": "Candidate: Jia et al. 2021 Am J Hum Genet 108:163, MSH2 loss of function by 6-thioguanine resistance in HAP1 (higher LoF score = loss of function). Confirm URN and take the paper's classification threshold.",
+    "verified": false
+  }
+}
